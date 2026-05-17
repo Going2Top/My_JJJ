@@ -137,3 +137,56 @@ mvn spring-boot:run -o -pl 你的主模块名 -Dspring-boot.run.fork=false
    # 先单独跑 web-module，同级模块不在 Reactor 里
    mvn spring-boot:run -pl web-module    # ← 这时候才需要 common-module 提前 install
    才需要 install。加了 -am 就没这事了。
+
+
+
+
+
+
+
+# 呃呃呃呃呃
+
+ > 输出的信息是一样的啊  啥也看不到
+
+ ✧ Thinking  (reasoning...)
+ ✧ WebSearch  telepresence 2.27.4 windows mount volume point not working
+
+ ✧ WebSearch  telepresence v2 windows "volume mount point" drive letter empty winfsp
+
+ ✦ 搜不到完全匹配的。让我换个思路——排查一些社区中较少讨论但可能的原因：
+
+---
+
+   ## 关键方向：用户 daemon 会话隔离问题
+
+   Telepresence 的 user daemon 在 Windows
+   上如果运行在不同的用户上下文中，它创建的盘符你在当前登录会话里是看不到的。这是 Windows 的限制。
+
+   ### 先试这个
+   [cmd]
+   :: 完全退出
+   telepresence quit
+
+   :: 杀掉残留进程
+   taskkill /f /im telepresence.exe 2>nul
+
+   :: 确认没有残留
+   tasklist | findstr -i telepresence
+   ### 然后用普通用户 CMD（不要管理员）运行
+   [cmd]
+   telepresence connect --mount=true --mount-flag=X:
+   这很关键——不用管理员权限运行，daemon 才能跑在你当前登录会话中，盘符才可见。
+
+---
+
+   ## 同时查
+   [cmd]
+   :: 看 daemon 日志
+   dir "%LOCALAPPDATA%\telepresence\logs\" /od
+   dir "%APPDATA%\telepresence\logs\" /od
+
+   :: 看 Windows 事件日志中 WinFsp 错误
+   wevtutil qe Application /c:10 /rd:true /f:text /q:"*[System[Provider[@Name='WinFsp']]]"
+   ---
+
+   先试非管理员 CMD 运行那个，这个解决了很多人的问题。
