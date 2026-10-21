@@ -1,0 +1,2 @@
+# Python >= 3.10. Uses only the Python standard library.
+# No pip installation required.

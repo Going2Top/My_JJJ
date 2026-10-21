@@ -1,0 +1,1045 @@
+智能体 ERP 操作系统详细设计
+版本 1.0　日期 2026年10月21日　读者 产品负责人 前后端工程师 Coding Agent
+1 使用方法与还原边界
+本设计以用户提供的《智能体时代的ERP架构演进.mp4》为唯一产品参考，目标是让后续 coding agent 实现视频中可见的十二个模块及其交互，并为需要真实运行的部分提供可执行的后台方案。先交付确定性的完整演示系统，再替换模型与 ERP 适配器；不得以真实 SAP、模型账户或企业知识库尚未提供为由阻塞原型还原。
+视频时长 385.30 秒，画面 1280 × 720，24 fps。已按五秒间隔提取 77 张参考画面并检查主要页面、抽屉和状态变化；随包保留 28 张关键原始分辨率截图及索引。时间戳表示采样画面所在时刻，页面切换起止为近似值，并非逐帧点击日志。本轮已完成全长音轨的自动转写，并逐段阅读转写、结合画面校核关键术语和数值；另附带时间戳的旁白解析。自动转写含术语错字，故不作为精确逐字字幕；未能从画面校核的语音细节保留不确定性。这是视听内容解析与交互还原详设，不是原产品源码的反向还原。
+视频标题页明确写有“独立架构研究”“概念蓝图｜非产品方案”，作者署名 Charles。必须保留这种来源语境：视频展示概念原型，不足以证明真实模型推理、SAP 写入、审批引擎或知识图谱后台已实现。截图中模型名称、API 名称、版本和评测数字均作为原型展示数据，不作为供应商现行能力或可用 API 的证明。
+1.1 证据标签
+全文采用四种标签。V 表示画面明确可见；A 表示自动转写结合画面校核的旁白语义；I 表示由前后画面推断的交互或关系；D 表示为编码落地补充的设计。任何技术栈、数据库、接口、鉴权、模型 Prompt、状态机、错误恢复、响应时限及验收阈值，除特别标记外均属 D。未曝光的表单、菜单和后台不得伪称视频原功能。
+优先级为 P0 画面与演示闭环、P1 生产式后台语义、P2 企业集成扩展。P0 并不等于只有静态页面：所有被展示的关键操作必须改变共享状态，刷新后可恢复；模型和外部系统可用可注入延迟与故障的模拟器。
+1.2 两种运行模式
+replay 模式用于对照视频。固定 1280 × 720 浏览器视口，载入视频初始快照，所有模型、外部系统和评测均使用明确标记的演示数据；只有用户点击或显式演示事件推进状态。历史示例统计允许与明细不对应，但要在开发说明中声明口径，不允许伪装成实时聚合。
+integrated 模式使用同一页面、领域模型和操作接口，替换真实数据库、队列、模型和 SAP 适配器；统计统一由服务端投影计算。真实写入默认关闭。模式标识放在开发环境横幅或设置中，视觉对比截图时可隐藏横幅；不得借此把演示评测显示成真实测试结果。
+1.3 最终交付与完成定义
+交付完整十二模块、两类设计器、三维关系图、运行实例抽屉、人工决策、工具创建、资产审批及统一审计；至少跑通一条“供应商邮件与发票 → OCR → 三单匹配 → 规则 → 专家建议 → 人工审批 → 受控 ERP 写入 → 审计归档”的闭环。其他流程具备可浏览目录和可配置规则，不能宣称已实现八套完整财务业务引擎。
+视觉相似、交互可用、业务状态一致和生产集成是四个不同验收维度。视频不足以支持“后台 1 比 1”承诺；P0 验收追求已展示画面的高保真重现。
+2 视频证据与需求追踪
+证据
+时间段
+已见内容
+设计范围
+参考图
+V01
+00:00–00:06
+标题 概念蓝图 非产品方案
+来源与边界
+00-title
+V02
+00:10–00:39
+运行中心 4 个总览卡 流程表
+运行概况与下钻
+01-runtime
+V03
+00:40–00:45
+发票到付款 8 条业务实例 4 类状态
+实例工作列表
+02-instances
+V04
+00:45–01:15
+0179 实例抽屉 邮件 SAP 事实 差异 建议 证据 负责人 时间线
+证据驱动的异常处置
+03-instance 04-instance-bottom
+V05
+01:15–01:40
+人工决策 3 条队列 逐步清空
+批准与共享状态联动
+05-human 06-human-empty
+V06
+01:40–01:55
+8 个流程智能体 卡片版本与状态
+流程目录
+07-process
+V07
+01:55–02:15
+流程构建器 节点库 缩放 选中属性 分支
+可编辑业务骨架
+08-flow 09-flow-zoom
+V08
+02:15–02:30
+任务目录与三栏设计器 加入执行步骤
+任务资产组合
+10-tasks 11-task-designer
+V09
+02:30–02:50
+一人部门 KPI 图表 人员与规则编辑
+业务运营配置
+12-dashboard 13-staffing 14-close-rules
+V10
+02:50–03:25
+SAP 系统群 协作消息 文件内容 数据外围
+连接与路由治理
+15-connectors 16-messages 17-data
+V11
+03:25–03:45
+工具中心 搜索筛选 新建抽屉
+受治理业务动作
+18-tools 19-tool-create
+V12
+03:45–04:05
+Skill 分类 Builder 自然语言填充 测试 发布审批
+可组合执行能力
+20-skills 21-skill-builder 22-skill-schema
+V13
+04:05–04:25
+Expert 判断目标 证据约束 评测 审批
+无工具的独立判断
+23-expert
+V14
+04:25–05:35
+企业认知基座 旋转缩放 点选 分类过滤 关联详情
+三维关系图与知识模型
+24-graph 25-graph-selected 26-graph-filter
+V15
+05:35–05:50
+再入流程构建器 切换运行记录的提示
+设计与运行视图
+09-flow-zoom
+V16
+05:50–06:10
+审计链 八个步骤 七项治理控制
+贯通资产与业务对象审计
+27-audit
+V17
+06:10–06:25
+返回标题页
+结束 无额外产品模块
+00-title
+
+旁白分段解析及其设计影响见 旁白解析.md。A01 00:08–00:27 明确强调分工组合与追溯；A02 01:14–01:42 明确人工决策包含正常审批、异常确认、驳回重做和补证重提；A03 03:58–04:20 说明 Skill 与 Expert 可通过自然语言生成；A04 04:57–05:36 区分知识图谱与更完整的认知基座，并声明后者尚需研究；A05 05:53–06:19 强调持续工作、反馈与迭代。
+具体截图时间与文件名以 reference/index.json 为准。截图中的光标、滚动条和压缩噪声不属于页面组件。视频黑场不作为系统页面。
+3 产品定位与对象职责
+3.1 产品目标
+V：界面名称为“企业智能体工作平台 / 智能体 ERP 操作系统”，当前范围“财务 · 端到端运营”。运行中心先看流程智能体总体运行状态，进入流程后查看业务实例。人工只处理制度要求、风险和歧义，常规路径继续运行。负责人治理 KPI、人员分配、规则阈值和异常，配置更改须经审批。
+I：这是面向财务负责人、流程设计者和资产治理者的运营控制台，而不是一个以聊天窗口为中心的助手。视频没有展示全局自然语言聊天页、语音入口或任意 ERP 操作的即时执行界面。不要因为“ERP Agent”而擅自在 P0 首页增加聊天框。
+3.2 七类资产与边界
+对象
+负责内容
+输入输出
+明确禁止
+Connector
+系统实例 身份 凭据 连接健康 业务路由
+routeKey → 可授权的连接句柄
+在这里配置业务动作 Schema 或替代工具权限
+MCP Tool
+面向 Agent 的业务动作 底层 API 映射 输入输出 权限 测试 版本
+已校验 JSON → 结果与证据引用
+绕过路由与审批直接写 SAP
+Skill
+组合多个工具的执行能力
+文件或业务输入 → 结构化结果
+接管 Connector 凭据与路由治理
+Task Agent
+可复用数字岗位 调度内部能力 超时重试和转人工
+任务上下文 → 可追溯结果
+把 Expert 当作可执行工具持有者
+Process Agent
+端到端业务骨架 分支 人工点 写入 审计
+业务事件 → 持久化流程实例
+依赖临时对话记忆维持长流程
+Expert
+读取知识与可信 Skill 结果 独立判断
+证据包 → 建议 依据 置信与人工条件
+绑定 Connector 或 MCP Tool 执行任何系统动作
+Enterprise Cognitive Foundation
+关联外部上下文 SAP 对象 人员 事件 可执行规则
+可定位且有权限的知识与关系
+把未授权邮件内容当成系统指令
+
+以上职责来自 V07、V08、V10–V14 的页面说明。D：进程权限与 Schema 校验必须执行这些边界，不能只靠 Prompt 文案约束。Expert 运行上下文根本不注入工具注册表；其 outputSchema 不含 executableCommand 字段。
+3.3 主要角色
+D：运营负责人查看部门数据和配置人员规则；流程设计者编辑草稿但不能自行批准自己的受控发布；资产维护者管理 Connector、Tool、Skill、Expert；审批人处理被指派的业务待办；审计员只读全链路。系统服务账户负责确定性执行，不充当审批人。P0 默认“财务业务运营负责人”身份并提供开发测试身份切换，不在原始页面增加登录产品流程。
+4 信息架构与通用界面规格
+4.1 导航与路由
+编号
+分组
+中文名称
+英文副标题
+路由
+01
+业务运行
+运行中心
+Runtime
+/runtime
+02
+业务运行
+人工决策
+Human-in-the-loop
+/decisions
+03
+数字团队
+流程智能体
+Process Agent
+/process-agents
+04
+数字团队
+任务智能体
+Task Agent
+/task-agents
+05
+数字团队
+一人部门
+One Person Dept.
+/department
+06
+能力资产
+连接中心
+Connector Hub
+/connectors
+07
+能力资产
+工具中心
+MCP Tool Hub
+/tools
+08
+能力资产
+业务能力中心
+Skill Hub
+/skills
+09
+能力资产
+专家中心
+Expert Hub
+/experts
+10
+能力资产
+企业认知基座
+Enterprise Cognitive Foundation
+/knowledge
+11
+设计与治理
+流程构建器
+Flow Builder
+/flow-builder
+12
+设计与治理
+审计与治理
+Audit & Governance
+/audit
+
+D：业务实例子路由 /runtime/processes/:processId，抽屉 query 参数 instance=:id，流程设计 query 参数 flow=:id&version=:version。Tab 通过 URL 保持，如 /task-agents?tab=designer、/connectors?tab=messages、/skills?tab=builder。浏览器后退恢复上一个页面与 Tab；抽屉关闭只移除 instance 参数。部门是全局 scope，页面标题不会替代全局页头。
+4.2 布局与样式
+V：1280 × 720 画面内，左栏约 228 px，顶部约 65 px，主内容 x≈253，右边距约 40 px。左侧品牌区高约 78 px，范围卡 x16 y91 w199 h59；底部角色区 y659–718。左导航独立滚动，主区独立纵向滚动，顶部页头与侧栏固定。主区浅灰蓝背景，白卡片，黑色层级标题，蓝色主按钮，绿色正常/已连接/运行中，黄色关注/待审批/等待人工，红色异常。
+D：设计 token 初值如下，视觉验收时以截图校准，不视为从源码提取的精确色值。
+Token
+值
+用途
+sidebarWidth headerHeight
+228px 65px
+固定框架
+pagePadding gap
+24px 12px
+主区域与网格间距
+bg surface mutedSurface
+#F5F6FB #FFFFFF #F8F9FB
+背景 卡片 内区
+text secondary border
+#101318 #68707C #E4E7EC
+字体与边框
+primary selected
+#2858DE #EAF1FF
+主按钮与导航
+success warning danger
+#0B8068 #A17B24 #BD3654
+文字状态
+radius shadow
+14px 0 1px 4px rgba(20,30,55,.05)
+卡片
+title body label
+28px 12px 11px
+页面标题 正文 辅助
+
+字体用系统中文无衬线栈，优先 Microsoft YaHei、PingFang SC；英文数字用 Arial/Inter 回退。页面主标题粗体约 28 px，页头标题 16 px，KPI 数字 26 px。侧栏编号 22 px 方块，选中项淡蓝背景，中文主标签上方英文小字在下。按钮高 34 px，边框 1 px，圆角约 8 px。默认卡片内边距 16 px。表格行高约 49–58 px。
+主区宽度约 1052 px；四卡、五卡和三列目录均等分布局。流程设计器采用左 190 px、中央 minmax(360px,1fr)、右 210 px 三栏，间距 10 px。Task Designer 三栏约 200/538/224 px。Expert 和 Skill Builder 左右约 62%/36%。知识图主画布约 707 × 450 px，右详情约 267 px，均自带圆角与边框。
+D：以桌面为 P0。≥1440 px 主区随宽度扩展，卡片维持三列；1024–1199 px 保留侧栏并允许表格横向滚动；<1024 px 允许折叠导航和设计器横向滚动，不要求移动端 1 比 1。不能将整张截图当背景图铺满冒充实现。
+4.3 公共组件与行为
+AppShell、SidebarNav、ScopeCard、GlobalHeader、PageHeader、StatCard、StatusBadge、CardGrid、DataTable、Tabs、PillFilter、EvidenceList、RightDrawer、Timeline、ApprovalBanner、SchemaEditor、AssetPicker、EmptyState、Toast、ErrorState 是共享组件。全页范围卡和页头部门选择都绑定 departmentId；初始只有财务选项，更多部门为扩展，不捏造画面中的部门列表。
+抽屉宽约 504 px，自右侧覆盖，遮罩 rgba(15,23,42,.20)，页顶关闭按钮；正文内部滚动。Esc 和关闭按钮关闭，遮罩点击可关闭但未保存表单需先确认丢弃。打开锁背景滚动并管理焦点。Toast 黑底白字居中靠下，约 2 秒后消失，但真实操作状态不能只存在于 Toast。
+所有保存、批准、发布和测试操作应有 pending、成功、失败状态。重复点击 pending 按钮禁用。筛选变化立即更新结果数；空结果给清空筛选入口。P0 演示固定延迟 300 ms；外部失败不得一直 spinner。键盘可聚焦按钮、Tab、表单和抽屉，状态不能只靠颜色表达。
+5 运行中心详细设计
+5.1 总览
+V02：页面文案“只看财务流程智能体总体运行状态；进入流程后再查看业务实例”。右上“刷新状态”“设计流程”。四张 KPI 为运行中流程实例 24、今日完成 186、等待人工 3、当前异常 2，下方辅助均为部门实时汇总。表头为流程智能体、运行中、已完成、异常、等待人工、SLA、入口。
+首六条可见数据如下；底部未完整曝光数据由 fixtures 显式标注为补全。
+流程
+任务数
+人工点
+运行
+完成
+异常
+待人工
+SLA
+发票到付款
+3
+1
+3
+22
+0
+0
+正常
+月末关账
+4
+2
+4
+39
+1
+1
+正常
+应收催款
+5
+3
+5
+56
+2
+0
+正常
+费用报销
+6
+1
+6
+73
+0
+1
+正常
+资金预测
+3
+2
+7
+90
+1
+0
+临界
+固定资产核对
+4
+3
+8
+107
+2
+1
+正常
+
+每行“查看实例”进入该流程列表。D：点击行标题同效，禁止点击无关空白区误跳转。“设计流程”打开当前选择流程的设计器，无选择时默认发票到付款；“刷新状态”重新拉取快照，不随机改数据。
+注意：上述可见行运行数之和已超过 24，完成数也超过 186。replay 保留原型展示值；integrated 汇总按实际部门内实例计算，不继续复制这些矛盾。
+5.2 发票到付款实例列表
+V03：顶部“← 返回流程总览”“发票到付款 · 业务实例工作列表”，说明当前处理 8 个业务实例；四卡处理中 4、等待人工 2、异常 1、已完成 1。明细字段业务实例编号、供应商/业务对象、金额、当前节点、当前任务智能体、状态、开始时间、耗时、人工负责人。数据见 fixtures/seed.json。
+实例尾号
+供应商
+金额元
+节点
+Task
+状态
+开始
+耗时分
+负责人
+0182
+苏州精密制造供应商
+48620
+信息提取
+发票识别
+运行中
+07-31 08:12
+12
+李敏
+0179
+上海工业服务供应商
+126800
+三单匹配
+三单匹配
+运行中
+07-31 08:24
+18
+周强
+0168
+南京设备供应商
+8430
+重复检查
+重复发票检查
+等待人工
+07-31 08:41
+31
+王芳
+0154
+无锡物流服务供应商
+76500
+人工复核
+会计科目建议
+等待人工
+07-31 09:02
+44
+陈晨
+0147
+常州零部件供应商
+218900
+SAP 校验
+凭证过账
+运行中
+07-31 09:16
+26
+李敏
+0139
+杭州软件服务供应商
+32760
+付款建议
+付款建议
+已完成
+07-31 09:34
+58
+周强
+0128
+昆山维修服务供应商
+64200
+凭证过账
+关账核对
+异常
+07-31 09:46
+39
+王芳
+0116
+宁波包装材料供应商
+12480
+审计归档
+财务通知
+运行中
+07-31 10:03
+21
+陈晨
+
+编号格式 INV-2026-尾号。金额用分存储，显示 ¥ 和千位分隔；日期示例属于视频种子，不替换成当前日期。状态筛选和分页为 D，可置于扩展模式；replay 首屏不增加视频未见的工具条。
+5.3 实例详情与演示事件
+V04：打开 0179 后，原列表金额从 126800 变为 16500，当前节点变“异常判断”，状态等待人工，处理中从 4 变 3、待人工从 2 变 3。I：这可能是作者的脚本化演示事件，不能断定是邮件实时更新后台。D：定义手动事件 email_adjustment_0179，点击 0179 之前由演示脚本触发一次，列表与抽屉读取同一实体；普通的 GET 详情不得修改业务事实。为贴近视频，可由 replay 交互控制器在首次点击时先 dispatch 演示事件再打开抽屉，并在代码中明示 replay 专用。
+抽屉顺序为业务实例摘要、任务链与资产、外部上下文、SAP 结构化事实、三单差异与 AI 建议、证据、暂停原因/人工负责人、ERP 读取/写入对象、时间线与审计记录。
+V：0179 任务链显示“发票识别 → 三单匹配 → 金额阈值判断 → 三单匹配 → 人工决策 → 审计归档”；标签 Task Agent 三单匹配、Skill 发票 OCR 提取、Expert 应付账款复核专家。这条运行轨迹含重复三单匹配节点，应按运行访问序列展示，不强行与静态流程目录中的任务数相等。
+邮件说明 2026-07-31 08:24 设备维护服务金额调整为 ¥16500，附发票与服务完成说明；发票 INV-2026-0179，上海工业服务，含税金额 ¥16500，设备维护服务。SAP 采购订单 PO-4500123 当前金额 ¥18500，仅含基础维护；收货凭证 GR-50007621，基础维护已收货，新增服务已完成但订单未见对应服务行。
+差异 ¥2000，10.8%，且存在订单外新增服务。建议暂停 SAP 写入，核实邮件调整授权，补充或修订采购订单后再进入凭证预制。证据为邮件说明、发票 PDF、采购订单、收货凭证、规则 R-21。主负责人应付账款负责人、备选风险复核人、超时升级部门负责人。允许读取供应商主数据、采购订单、收货记录；受控写入会计凭证/付款建议。
+D：差异统一计算 abs(16500−18500)/18500 ×100=10.8108%，显示一位小数 10.8%。不能按发票额做分母。规则阈值默认 2%，等于阈值为不超额，但缺证据、重复发票和未授权新增服务仍可强制转人工。
+6 人工决策详细设计
+V05：两栏待决队列与决策原则。初始三项：发票到付款需要责任人确认，发票 51000983，R-21；月末关账需要责任人确认，公司代码 1000 关账，R-22；应收催款需要责任人确认，客户 300184 未清项，R-23。每项有业务对象/规则标签、“查看证据”“批准”，首项红色边条，其余黄色。右上“批量委派”。
+决策原则原意必须保留：证据、规则版本和建议动作同时可见；批准与拒绝写入统一审计链；责任人与执行智能体职责分离。A02：旁白明确说明该中心不只处理异常，也包含正常流转到审批节点的业务；支持批准继续、驳回重做、补充证据后重新提交。画面只展示批准按钮，拒绝入口未曝光。D：P0 保留原按钮布局，“查看证据”打开带证据和版本的详情抽屉，并在抽屉底部提供批准、拒绝、补充材料三个操作，不在队列行擅自加满按钮。
+D：DecisionTask 新增 sourceKind=NORMAL_APPROVAL/EXCEPTION_REVIEW/RESUBMISSION，统一由流程 HUMAN 节点创建；队列视觉沿用相同布局，不另开第二个审批中心。
+approve：校验当前用户是受派审批人/合法备选、证据仍有效、实例 revision 未变化，记录意见和 payloadHash，写入 HumanDecision 与 AuditEvent，待办从未处理队列移除；只恢复流程至复核/写入前校验节点，不能把“批准”直接当作 SAP 写入成功。reject：必填原因，进入 REJECTED 并归档，禁写 ERP。request_changes：进入 WAITING_INPUT，保留证据和责任人；提交新证据产生新快照、新 revision，重新提交后恢复到复核节点，旧批准失效。驳回重做与最终拒绝分开：action=RETURN_FOR_REWORK 时退回指定可重做节点，记录原因，最多重做 3 次；action=REJECT 才最终拒绝归档。批量委派只改变 assignee，不改变批准状态。
+V：视频清空后待办卡仍可显示“共 3 项待处理”，属于原型计数未联动。D：默认修复，计数必须 3→2→1→0，空态“当前没有待处理决策”；可通过 replayExactBugs 显式复现原文字，但不进入正常验收。
+D：batch delegation 弹窗包含待办多选、目标审批人、备选人、原因、提交；提交后审计记录原人与新人、时间和原因。此表单为补充设计。正在被他人处理返回 409，前端重新刷新，不显示成功。页面离开与重新进入保持处理结果。
+7 流程智能体目录
+V06：三列八张卡。标题、简述“协调业务对象、任务智能体与人工控制点的端到端流程”、任务数/人工介入数、版本、“部门同步运行”、状态和“查看业务实例”。右上“导入模板”“新建流程”。
+编号
+流程
+任务数
+人工点
+版本
+状态
+P1
+发票到付款
+3
+1
+v2.0
+已激活
+P2
+月末关账
+4
+2
+v3.1
+已激活
+P3
+应收催款
+5
+3
+v4.2
+已激活
+P4
+费用报销
+6
+1
+v2.3
+草稿
+P5
+资金预测
+3
+2
+v3.4
+待审批
+P6
+固定资产核对
+4
+3
+v4.0
+已停用
+P7
+总账异常处理
+5
+1
+v2.1
+已激活
+P8
+税务资料准备
+6
+2
+v3.2
+已激活
+
+D：卡片目录是发布版本快照，流程构建器展示另一草稿 v3.6，因此不覆盖 v2.0 发布版。目录任务数为目录快照字段，编辑器节点数可能不同；integrated 从版本定义中计算两类数量。点击业务实例带 processId，草稿与停用流程可以查看历史实例但不能启动新实例。
+新建流程弹窗填名称、部门、业务对象、负责人；创建 DRAFT 后进入构建器。导入模板支持本包 FlowDefinition JSON 校验，拒绝任意可执行代码/脚本；视频未展示导入弹窗，按 D 实现。
+8 流程构建器
+8.1 布局与节点边界
+V07：页面说明“编排流程智能体的业务骨架：任务智能体执行并调用 Skill，Expert 独立判断，规则、人工、SAP 写入与审计均作为可治理节点”。顶部白条“发票到付款 · v3.6”“草稿”，Tab 设计、运行记录、版本，右侧自动布局、测试运行、提交审批。
+左侧节点库 Tab 为任务智能体、Expert、业务规则、人工介入、SAP 与审计；提示“点击节点插入到当前选中节点之后”，搜索框“搜索节点或业务资产”，分类默认全部。中间点阵画布，缩放 −、100%、+、适应画布；画面中有 60% 状态。右侧“节点属性”，展示节点名称、执行职责、引用 Skill、依赖 MCP Tool、输出契约等。顶部提示 Skill/MCP Tool 在任务智能体内部调用，受控 SAP 写入。
+D：节点类型 EVENT、TASK、RULE、EXPERT、HUMAN、ERP_WRITE、AUDIT、END。Skill 与 Tool 是 TASK 的内部依赖，不直接伪装成财务业务骨架节点。点击节点切换右侧属性；选中框蓝色，类型条 TASK 蓝、RULE 黄、EXPERT 紫、HUMAN 红、ERP_WRITE 绿。节点可拖动，连接口支持合法连线，空白拖动画布，滚轮缩放。节点位置和 viewport 存入草稿。
+8.2 默认流程与分支
+V：画面可见收到供应商发票 → 发票识别任务智能体 → 三单匹配任务智能体 → 发票差异业务规则，随后分支到应付账款复核专家、三单差异复核人工点，以及 SAP 写入相关节点。规则库出现采购订单与发票金额差异率、收货数量与开票数量差异、GR/IR 未清项账龄上限、待处理会计凭证截止时间。
+D：为闭环补全以下确定性图，不声称右侧未曝光节点名称完全来自视频。正常路径规则通过 → 写入前校验 → 会计凭证预制 → 审计归档 → END；超阈值或低置信路径 → Expert → HUMAN → 重新校验 → ERP_WRITE；缺材料路径 → WAITING_INPUT，拒绝路径 → 审计归档 → REJECTED。Expert 仅提供建议，规则引擎决定是否能自动继续；Expert 推荐通过不得覆盖 mandatoryHuman=true。
+流程图源代码见 Markdown 版本；默认业务路径如下。
+正常路径 收到发票 → 识别 → 三单匹配 → 规则通过 → 写入前校验 → 受控凭证预制 → 归档
+复核路径 规则异常 → 专家建议 → 人工决策 → 重新校验；事实改变则重新匹配
+拒绝路径 人工拒绝 → 拒绝归档；审批不直接等于 SAP 写入成功
+金额阈值比较由 RULE 节点执行；OCR 和匹配输出置信度由 TASK 输出。HUMAN 人员配置从已发布的人员分配版本解析，流程运行实例绑定版本。循环只允许显式受限的 recheck：maxIterations=3，超过进入 FAILED_NEEDS_REVIEW；一般设计图要求有向无环。
+8.3 编辑与测试操作
+点击库条目插入到选中节点之后；无选中时插入到最后可编辑节点前。已有多个出边时要求选择被拆分的边，不能随意破坏条件。删除节点前显示受影响连接，保留首尾事件与必需审计节点；支持撤销/重做各 30 步。自动布局只变位置，不改条件和依赖。保存草稿自动节流 800 ms，显示保存状态，离开有未保存更改时确认。
+提交审批前校验：唯一入口、可到终点、节点 ID 无重复、所有条件完备且互斥、无未绑定资产、已发布依赖版本存在、写入经过控制点、人工点有主备责任与升级、规则有单位、输出 Schema 兼容。错误定位到节点与具体字段。D：运行记录与版本 Tab 实际展示运行列表和版本 diff；V15 只见切换提示，未证明视频实现完整面板，因此属于增强，不能仅 toast 后仍保留原画布冒充运行记录。
+测试运行使用 fixtures：正常、超阈值、低置信、缺收货、写入超时。按节点高亮并可打开该步输入/输出/证据，不显示隐藏思维链；显示结构化决策摘要即可。提交审批创建 ApprovalRequest(PENDING)，不切换 activeVersion；批准发布后新实例使用新版，存量实例仍跑旧版。
+9 任务智能体与任务设计器
+V08：目录显示八类任务：T1 发票识别、T2 三单匹配、T3 重复发票检查、T4 会计科目建议、T5 凭证过账、T6 付款建议、T7 关账核对、T8 财务通知。目录文案“可复用的数字岗位；设计器将 Skill、Expert、Knowledge、Connector 与 MCP Tool 作为边界清晰的内部资产依赖”。每卡超时 120 秒、重试 2 次、可信度 0.88、人工条件低置信度或高风险写入、负责人业务运营负责人，状态“可配置”。
+目录中流程关联依次为 T1 发票到付款/月末关账，T2 月末关账/应收催款，T3 应收催款/费用报销，T4 费用报销/资金预测，T5 资金预测/固定资产核对，T6 固定资产核对/总账异常处理，T7 总账异常处理/税务资料准备，T8 税务资料准备/发票到付款。这些为视频展示关系，不代表真实财务分工已验证。
+设计器左栏资产库五类 Skill、Expert、Knowledge、Connector、MCP Tool。中栏有序执行步骤，编号圆点、资产名称、“执行并记录完整轨迹”、已关联标签，右上“已选 9 项资产 · 9 个步骤”，加入更多资产后可增至 13。右栏治理字段名称“发票核验任务智能体”、部门财务、超时 120 秒、重试 2 次、可信度阈值 0.88、人工条件、负责人。
+V：选中不同资产分类后点击加号可加入步骤；出现“已加入执行步骤：SAP 采购申请处理”。Knowledge 类有采购订单知识域、发票证据关系、供应商主数据、企业制度规则；Connector 类有 SAP 系统群、邮件连接器、文件内容连接器、消息通知连接器；Skill 示例有 SAP 主数据读取/维护、采购申请处理、采购订单创建/变更、供应商发票校验、销售订单读取/创建。
+D：设计数据拆成 steps、knowledgeBindings、connectorBindings、toolBindings、expertBindings。保真界面可把加入的各种资产统一显示在“执行步骤”列表，但知识和连接器节点语义分别是加载有权限的上下文、解析连接配置，不等于可执行任意指令。编译阶段转为执行计划并验证每种类型能力。只读任务不能引用受控写工具；Expert 子调用仍无工具权限。步骤支持移除、拖动排序、重复资产去重提示；这些属于必要编辑补充。
+超时是每次 TASK attempt 的 120 秒，重试 2 次为最多 3 次 attempt；仅对可重试无副作用操作自动重试，写入未知结果按第 17 节核对。结构化输出至少 status、confidence、facts、evidenceRefs、nextAction、needsHuman、reasonCodes，不将自由文本当作成功标志。
+10 一人部门看板
+V09：标题“财务一人部门看板”，说明一名负责人治理 KPI、人员分配、阈值和异常，配置变化必须审批。五 KPI：KPI 达成 96.2%、自动处理 91.8%、人工介入 2.4、异常按时关闭 94.1%、积压 18。人工介入 2.4 的单位画面未标明，replay 原样显示；integrated 明确为人工介入率百分比，不把 2.4 当人员数。
+四图：目标进度环 96% 与关账准时率；7 天处理量与积压柱图周一到周日；数字团队健康与负载横条，发票识别 62%、三单匹配 78%、重复发票检查 89%、会计科目建议 55%；异常来源占比四色环图。图中未标明的原始量与占比不能反推为准确值，fixtures 中给 D 示例并标记。P0 用固定图形数据，P1 按部门与时间窗口聚合。
+人员分配表四列人工介入点、主负责人、备选负责人、响应时限，四条为三单差异复核/应付账款负责人/财务运营负责人/30 分钟，月结关账延期确认/总账负责人/财务运营负责人/20 分钟，高风险付款确认/资金经理/财务运营负责人/15 分钟，税码与税率例外/税务负责人/应付账款负责人/45 分钟。视频可见三单差异复核的备选被改为资金经理。
+“+ 新增介入点”增加行；表格允许内部横向滚动。保存前验证启用行都有人和升级路径，时限为正整数；“保存人员分配待审批版本”创建独立草稿版本，活动配置不变。不得保存输入框即直接改运行实例责任人。
+流程业务规则选择器切换流程时加载该流程草稿与生效版，不串改值。供应商发票审核流程：公司代码 1000 · 应付账款，配置版本 v3.4，审批责任人应付账款负责人。金额差异率 2%，收货与开票数量差 0 件，税率异常容忍度 0 百分点，重复发票识别窗口 365 天；复选“拦截重复发票、无采购订单发票及供应商银行账户突变”。保存为待审批版本。
+月结关账流程：集团报表 · 月末关账，配置 v2.8，审批责任人总账负责人；GR/IR 未清项账龄上限 30 天、待处理会计凭证截止 18:00、科目余额环比异常幅度 15%、关账任务延期容忍时间 2 小时；复选“关账日历关键节点不得绕过人工确认”。
+D：百分比和百分点字段须分别命名；时间以部门时区 Asia/Shanghai 解析；18:00 与业务日历组合成截止时间。每项规则保存阈值、单位、比较符、作用范围、命中后的分支、责任人、版本和生效期。活跃实例沿用其绑定规则版本，显式 re-evaluate 操作另计审计。
+11 连接中心
+V10：连接中心“独立管理系统实例、身份与凭据、连接状态及业务路由；面向 Agent 的受治理业务动作由工具中心独立管理”。蓝色提示进一步说明只负责连接到哪里、以谁的身份、通过哪条路由，业务动作、输入输出契约、权限与底层 API 映射不在此配置。
+四 Tab 为 SAP 系统群、协作消息、文件内容、数据外围。SAP KPI 为实例 8、生产 7、正常 6、关注 2、业务路由 12。系统别名、事业部、区域、环境、业务范围、健康状态六列。
+系统别名
+事业部
+区域
+环境
+业务范围
+健康
+ECC-华东生产
+集团
+华东
+生产
+财务与控制
+正常
+S4-集团核心
+制造事业部
+华北
+生产
+采购与库存
+正常
+S4-欧洲生产
+海外事业部
+欧洲
+生产
+销售与分销
+正常
+ECC-制造一部
+消费事业部
+华南
+测试
+生产与质量
+正常
+BW-财务分析
+集团
+华东
+生产
+财务与控制
+关注
+S4-销售中心
+制造事业部
+华北
+生产
+采购与库存
+正常
+ECC-供应链
+海外事业部
+欧洲
+生产
+销售与分销
+正常
+S4-共享服务
+消费事业部
+华南
+生产
+生产与质量
+关注
+
+SAP 表下可见“业务路由策略”标题，具体未完整曝光。D：补全 routeKey、systemId、companyCode、businessDomain、environment、identityRef、priority、healthPolicy、effectiveVersion，路由解析必须唯一，冲突返回 ROUTE_AMBIGUOUS，不随机选系统。
+协作消息卡为邮件、企业微信、钉钉、Microsoft Teams；前三者中钉钉未连接，其余已连接；说明“消息接收、发送、通知与证据归档”。文件内容 Tab 在视频有展示但截图文字不足以确认完整列表；D 填文件内容连接器一张可配置卡，勿宣称 SharePoint 等服务已被展示。数据外围为单卡“连接状态：已纳管 · 最小权限 · 调用审计开启”。
+P0 卡片状态可浏览，P1 点击系统打开配置抽屉，密钥只存 secretRef，前端不返回凭据原文。连接测试只验证授权与健康，不修改财务对象。连接失败影响依赖调用并生成告警，不能把失败当空数据。
+12 工具中心
+V11：独立治理面向 Agent 的业务动作、契约、权限、底层 API 映射、版本、测试、发布与审计。五卡：工具总数 8、只读 4、受控写入 4、待审批 2、调用成功率 99.24%。搜索业务动作/映射/路由，权限与状态下拉，重置；右上新建 MCP Tool。
+ID
+动作
+映射展示
+路由
+版本
+测试与状态
+mcp-01
+读取采购订单
+OData API_PURCHASEORDER_PROCESS_SRV
+SAP 集团核心路由
+v2.4.1
+148/148 已发布
+mcp-02
+读取收货记录
+BAPI BAPI_GOODSMVT_GETDETAIL
+SAP 集团核心路由
+v1.9.0
+96/96 已发布
+mcp-03
+校验供应商发票
+RFC Z_AP_INVOICE_VALIDATE
+SAP 共享服务路由
+v3.2.0
+212/212 已发布
+mcp-04
+预制会计凭证
+BAPI BAPI_ACC_DOCUMENT_POST
+SAP 集团核心路由
+v2.1.0
+沙箱 84/84 待审批
+mcp-05
+创建采购订单
+Business API Purchase Order
+SAP 制造采购路由
+v1.6.2
+沙箱 72/72 已发布
+mcp-06
+查询库存可用量
+RFC BAPI_MATERIAL_AVAILABILITY
+SAP 供应链路由
+v2.0.3
+118/118 已发布
+
+前 3 与 mcp-06 只读，其余受控写入。最后两条画面未清晰核实，作为 D 补全“生成付款建议”“更新会计凭证”，不伪造为原文。
+特别说明：视频将“预制会计凭证”与 BAPI_ACC_DOCUMENT_POST 对应。该表仅重现 UI 映射文本，不能证明这个 BAPI 在目标系统满足“预制”的财务语义；生产集成必须由 SAP 适配负责人确认预制、过账和付款的不同操作契约，未确认前仅模拟执行，不直接拿此映射做真实写入。
+新建右抽屉标题“创建受治理业务动作”，分六段：基本信息，接口映射，Schema/输入输出，身份权限，测试用例，审批发布。视频使用概括性输入文本，D 将其实现为真正表单：name/domain/owner/version；protocol/operationName；inputSchema/outputSchema/errorSchema/evidencePolicy；connectorRouteRef/accessMode/writeConditions；测试输入与期望；提交说明。抽屉每段有浅灰卡片与输入。
+搜索对名称、API 映射、路由 case-insensitive 子串匹配；权限与状态 AND 组合，重置恢复全部。保存为 DRAFT；发布要求测试通过、审批完成、依赖路由可解析。已发布版本不可修改，复制出新版。真实 MCP 协议 server 可后加，P0 的工具中心实体是产品语义，REST 适配不等于已实现 MCP 握手。
+13 业务能力中心与 Skill Builder
+V12：Skill 是可组合多个 MCP Tool 的执行能力，Connector 路由与 MCP Tool 依赖保持独立治理。Tab“Skill 目录”“Skill Builder”。分类全部、SAP 业务、文档内容、Excel 数据处理、多表清洗、报告生成、图片、音视频、消息通知、治理安全。多表清洗可见“多表合并与对账”“重复记录归并”，输入文件或消息、输出结构化结果、依赖内容与消息连接器、权限受控、被引用 12 次与 13 次。其他类别的完整目录未曝光，P0 每类补一至两条 D 种子并标记。
+Builder 两栏。自然语言初值“读取供应商发票 PDF，提取字段并进行三单匹配，低可信度或金额差异超阈值时转人工”。按钮“填充 / 刷新结构化配置”。Skill 名“供应商发票三单匹配”、版本 v1.4.0、模型显示 GPT-5.2 Enterprise、执行模式确定性编排。此模型字符串仅为视频界面配置值，不保证实际 API 名称或可用性。
+依赖区左右分别为 Connector 路由、MCP Tool：路由 SAP 集团核心、文件内容默认勾选；工具读取采购订单、读取收货记录、校验供应商发票默认勾选，预制会计凭证、创建采购订单、查询库存可用量未勾选。输入 Schema 示例 invoiceFile uri、companyCode string、poNumber string；输出 matchStatus enum、variances array、evidenceRefs array。视频文本是简写，D 必须转换成合法 JSON Schema，详见 contracts。
+右固定测试样例 INV-2026-0182、公司代码 1000、PO 4500123、金额差异 1.2%；按钮“运行固定测试”；指标准确率 98.4%、P95 延迟 2.1s、单次成本 ¥0.08、异常覆盖 94%。这些是原型静态评测数值；真实实现必须有测试集、样本数、运行环境、模型版本、统计窗口和评测运行 ID，否则显示“演示指标”。
+“提交发布审批”仅创建待审批版本，不直接生效。自然语言填充是 D：模型生成结构化草稿，后端 Schema 校验，前端展示 diff 并确认应用；不得直接生成并运行任意代码。P0 对上述固定描述返回确定性配置；未知描述显示可编辑草稿与演示提示。按钮不自动替换已发布资产；测试只跑模拟 adapter。
+14 专家中心
+V13：Expert 是独立判断资产，读取知识与 Skill 结果，不绑定 Connector/MCP Tool，也不执行系统写入。左侧判断目标与模型、知识/证据与可选输入；右侧边界提示、评测与拒答治理、责任与审批。
+初始自然语言“判断应付账款差异是否可接受；禁止无证据批准、禁止绕过人工条件、禁止执行任何系统动作”。模型显示 Claude Opus 4.6，版本 v2.3.0；判断目标是给出是否建议放行，禁止无证据判断、直接调用 Connector/MCP Tool、执行写入。模型名仅回放字符串。
+知识输入勾选应付与供应商域 Knowledge Graph、企业制度财务与内控、历史批准案例、可选 Skill 结果三单匹配。证据要求至少 2 个可追溯引用；证据冲突说明冲突并转人工。评测案例：差异 1.2% 且证据完整建议通过；缺少收货记录无证据拒答并转人工；制度与历史案例冲突说明冲突。勾选“启用幻觉检测 / 无证据拒答”，按钮“运行评测集”。责任人应付账款负责人，审批链领域负责人 → 内控 → AI 治理委员会；底部提交审批，顶部填充判断配置。
+D：ExpertResult 含 recommendation=ALLOW_REVIEW/BLOCK/ABSTAIN、confidence、rationaleSummary、evidenceRefs、conflicts、requiresHuman、reasonCodes；字段“建议通过”不是支付授权。证据少于要求、证据越权、相互冲突、结构化输出非法、模型超时均转 ABSTAIN。引用校验必须匹配 Evidence.id，禁止编造 URL。知识检索由上游读取服务完成，Expert 只接收去敏后的 evidence bundle，不获得外部 connector 执行权。
+评测不等于真实幻觉自动鉴定。P0 用固定案例检查结构化拒答与引用完整性；P1 分别评估引用有效率、无证据拒答率、冲突检出率、错误放行率。提交审批绑定确切模型配置、提示版本、知识范围和评测结果。
+15 企业认知基座
+15.1 页面与交互
+V14：说明“统一关联外部上下文、SAP 业务对象、人员、事件与企业规则，构成企业自主生长的认知基座”。搜索 placeholder 搜索对象、关系或规则，例如采购订单、价格变更。六筛选全部、SAP 对象、外部上下文、人员角色、业务事件、可执行规则。主图可拖动旋转、滚轮缩放、点击节点查看关系；右详情滚动显示选中实体类型、中文名、英文名、描述和相邻节点卡。
+默认选中“事件：价格变更”，描述近 30 天 412 次；关系卡包括规则变更需授权、SAP 采购订单、会计凭证预制等。点 SAP 采购订单后详情显示共有 4500123 等约 1.2 万条主数据与变更记录，并列价格变更、采购负责人、会计凭证预制。图中约 12 节点，发光圆点、细边、选中加粗连线，背景浅蓝渐变。画面始终在旋转中，节点不是固定平面坐标。
+图例蓝 SAP、紫外部、绿人员、橙事件、红规则。节点中文主标签与灰英文副标签，默认选中橙色大节点。右详情点击关系卡高亮对应节点/关系，但是否同时改主选中需按参考变化校验；D 规定点击关系卡 selectNode，详情跟随，hover 仅高亮边。
+15.2 图数据与渲染方案
+D：用 Three.js + react-three-fiber 或等价 Canvas/WebGL 渲染，固定三维坐标与随机种子 42；OrbitControls 允许旋转缩放，禁垂直无限翻转，缩放距离 4–20。文字通过 HTML overlay 或 sprite，中文字体加载后再截图。P0 不开启自动持续旋转，用户拖拽改变相机；若需要视频静帧对比用 referenceCamera 固定相机，避免截图非确定性。背景 CSS radial-gradient，节点 glow 用透明 sprite，弱边透明度约 .08，选中相邻边约 .65，非相邻点保持低透明。
+初始节点：SAP 采购订单、会计凭证预制、物料 4500123、供应商 A-108；供应商邮件、发票 PDF、框架合同附件、会议纪要 Q3；采购负责人；事件价格变更；规则变更需授权、预算控制规则。图节点 ID 和边端点见 fixtures。物料 4500123 和 PO-4500123 在视频中都出现，必须按 type 分开 ID，不可只按数字合并。
+类型筛选只影响显示集合，不删除数据；对跨类型关系保留可见端点间的边，避免视频中筛选后仍留下指向隐藏节点的悬空线。后者可能是原型缺陷，默认修复。搜索匹配中文名、英文名、业务键，300 ms debounce，返回实体和关联关系；无结果显示空态。被筛掉的选中节点自动切到第一个可见节点或清空详情，不显示旧实体作为当前筛选结果。
+P0 用固定图 JSON，P1 关系模型至少含 entityType、businessKey、sourceSystem、validFrom/To、evidenceRefs、accessScope、observedAt；边含 predicate、source/target、sourceEvidence、confidence、version。图谱只是知识展示与检索层，规则执行仍由 RuleVersion 解释器进行，不能把自然语言关系直接当可执行代码。
+15.3 认知资产反馈闭环
+A04：旁白把当前页面定义为企业知识图谱，并进一步提出：结合业务判断、处理建议、人工反馈、规则版本和流程结果，才开始沉淀判断原因、过往处理及可复用经验。作者明确表示这仍需独立研究和持续验证，原型展示方向，并非已经完成的技术实现。不能把三维图画出来就宣称实现企业自学习。
+D：新增 DecisionRecord（事实快照、Expert 版本与建议、规则版本、证据）、OutcomeRecord（最终业务状态、外部对象号、是否冲销、处理耗时）、FeedbackRecord（评价人、纠错理由、正确结果、引用原判断）、ExperienceCandidate（适用条件、建议动作、支持案例、反例、审核状态、来源 trace）。它们通过 instanceId/traceId 关联图实体。实例归档后生成候选案例，只进入待审核案例池，不直接修改生产规则、Prompt 或模型。
+已批准案例才能成为 Expert 的历史参考输入；检索显示适用范围、时间和证据来源。规则和模型优化均通过新草稿、离线回归评测、审批、版本发布生效。负反馈标记原案例过期，保留历史不删除。P0 交付固定案例及关联详情；P1 持久化记录与人工审核；自动归纳质量、因果推断与学习收益评估列为 P2 研究，不承诺自动有效。
+验收：同一实例能从证据追到判断、人工修改、最终结果及反馈；新增负反馈不会立刻改变 active 规则；未审候选不能进入已批准案例检索；历史结论与当前制度冲突时 Expert 说明冲突并请求人工。
+16 审计与治理
+V16：说明 Connector、MCP Tool、Skill、Task Agent、Process Agent、Expert 与人工决定形成职责分离的统一审计链。左统一审计链案例 AP-2026-0731-014，右治理控制七行开启。
+时间
+主体
+行为
+说明
+09:18:38
+Connector
+邮件连接器读取供应商证据
+只读凭据 连接路由 证据指纹
+09:18:39
+MCP Tool
+调用读取采购订单业务动作
+Schema 权限 OData 映射 工具 v2.4.1 锁定
+09:18:40
+Skill
+发票 OCR 提取结构化字段
+输入输出版本锁定
+09:18:42
+Task Agent
+三单匹配完成核验
+置信度 0.91 发现差异
+09:18:43
+Expert
+应付账款专家给出复核建议
+留痕 未执行写入
+09:18:44
+Process Agent
+发票到付款进入条件分支
+SAP 写入暂停
+09:18:46
+人工决定
+责任人批准差异处理建议
+决定 证据 身份纳入审计链
+09:18:49
+受控执行
+写入会计凭证对象
+调用结果与业务对象号归档
+
+治理控制为 Connector 最小权限与凭据到期检查；MCP Tool Schema、权限、底层映射与版本锁定；Skill 输入输出与版本锁定；Task 超时、重试与可信度阈值；Process 审批后激活与失败补偿；Expert 证据要求、无证据拒答与输出契约；人工决定职责分离与证据完整性。
+D：P0 控制状态只读，不把“开启”做成可随意关闭的开关。审计事件追加写，事件含 traceId、instanceId、nodeRunId、actorType、actorId、action、assetRefs、ruleVersion、payloadHash、evidenceRefs、outcome、occurredAt、sequence。持久层禁止应用 update/delete 审计记录，纠错追加新记录；生产可补 hash chain/归档存储，但没有实现前不宣称不可篡改。前端只展示结构化摘要，原始证据按权限访问，不存模型隐藏推理文本。
+17 后台架构与运行语义
+17.1 默认技术栈与模块
+D：这是落地默认，不是视频原作者技术选型。前端 React + TypeScript + Vite、TanStack Query、Zustand 少量 UI 状态、React Flow 流程画布、Three.js 图谱、ECharts 图表。后端 Python FastAPI + Pydantic、SQLAlchemy/Alembic、PostgreSQL、Redis 队列与 worker、S3 兼容证据对象存储。P0 可用 MSW + IndexedDB 实现相同接口，提供 resetDemo 清空，避免为了“后台完备”推迟画面交付。
+建议代码目录 apps/web（pages components features api）、apps/api（routes services domain repositories）、apps/worker（executors adapters）、packages/contracts、fixtures、tests、infra。所有可见页面消费统一 DTO 和共享实体，不能每页各写一份互不关联数组。
+服务模块 Scope/RBAC、AssetRegistry、VersionApproval、ConnectorRouting、ToolGateway、SkillExecutor、TaskExecutor、ProcessRuntime、DecisionService、KnowledgeService、EvidenceService、AuditService、MetricsProjection。最初单体模块化部署即可，不要求十二微服务。API 不持有长任务线程；启动返回 runId，worker 接单。
+17.2 实体与版本
+实体
+关键字段
+关联与约束
+Department
+id name timezone
+所有读写按 scope 隔离
+Asset
+id kind name departmentId ownerId activeVersionId
+kind 不可跨类改写
+AssetVersion
+id assetId version status spec contentHash createdBy
+同一资产版本号唯一 发布后不可变
+AssetDependency
+fromVersionId toVersionId purpose
+锁版本 不只保存名称
+ConnectorRoute
+id version systemId identityRef scope health
+不保存凭据原文
+FlowDefinition
+versionId nodes edges viewport
+JSON 经编译校验
+ProcessInstance
+id processVersionId businessKey status revision contextRef
+同业务事件幂等启动
+NodeRun
+id instanceId nodeId visitIndex attempt status inputHash outputRef
+区分循环访问和重试
+DecisionTask
+id instanceId state assignee backup dueAt evidenceSnapshotHash
+单任务仅一次有效决定
+HumanDecision
+id taskId actorId action reason revision decidedAt
+指向证据快照
+ApprovalRequest
+id assetVersionId approvalChain state submittedBy
+配置审批与业务审批不同实体
+Evidence
+id type objectUri hash source observedAt accessScope
+内容可寻址 引用可授权
+ToolInvocation
+id nodeRunId toolVersion routeVersion idempotencyKey state
+关联外部对象号与未知结果
+AuditEvent
+id traceId sequence actor action refs outcome
+追加写 sequence 唯一
+OutboxEvent
+id aggregateId type payload deliveredAt
+与业务事务一起提交
+
+所有表都含 tenantId/departmentId 或通过明确 FK 可确定 scope；服务端每次查询验证，不能只靠前端过滤。时间数据库 UTC，界面 Asia/Shanghai。金额整数分加 currency，税率用 Decimal，JSON decimal 以字符串传输；不使用浮点金额。
+版本状态 DRAFT→PENDING_APPROVAL→APPROVED→ACTIVE→RETIRED，拒绝回 REJECTED 后复制新草稿；同一资产同一范围只有一个 ACTIVE。审批通过与激活是可分离操作，提交不激活。依赖变更生成新版本，不悄悄影响运行中实例。
+17.3 运行状态与事件
+ProcessInstance：CREATED→RUNNING，遇人工→WAITING_HUMAN，缺材料→WAITING_INPUT，外部不明结果→RECONCILING，已知失败→FAILED，可恢复错误→RETRY_WAIT，完成→COMPLETED，拒绝→REJECTED，取消→CANCELLED。展示“异常”映射 FAILED/RECONCILING，待人工只映射 WAITING_HUMAN，处理中映射 CREATED/RUNNING/RETRY_WAIT。列表计数互斥，单个实例不能同时进处理中与待人工。
+NodeRun：PENDING→RUNNING→SUCCEEDED；或 WAITING_HUMAN/FAILED/RETRY_WAIT/SKIPPED。节点输出必须先 Schema 校验、再存证据与审计、再推进下一节点。工作队列至少一次投递，使用 nodeRunId + attempt 去重，不能假设 exactly-once。
+主要事件 InstanceStarted、NodeStarted、EvidenceCaptured、TaskCompleted、RuleEvaluated、ExpertAdvised、HumanRequired、HumanApproved、HumanRejected、WriteRequested、WriteSucceeded、WriteOutcomeUnknown、InstanceCompleted、AssetSubmitted、AssetActivated。事件保存在 outbox，再推送 SSE 与更新统计投影。replay 事件同样通过 reducer 应用，不能直接修改 DOM 文本。
+17.4 审批与写入一致性
+审批提交采用 compare-and-swap：WHERE task.state=PENDING AND task.revision=expectedRevision，事务内记录决定、更新任务、更新实例、插入 AuditEvent 和 OutboxEvent。第二个审批人收到 409 REVISION_CONFLICT。审批时证据或金额变化则 412 EVIDENCE_CHANGED，旧决定不得继续授权新 payload。
+写入前验证 active tool version、route version、身份 scope、已批准的业务 payloadHash、证据新鲜度、规则版本、职责分离和公司代码；任何变化重新校验/审批。幂等键按 tenantId+instanceId+nodeId+visitIndex+businessPayloadHash，不随网络重试变化。
+写入结果 SUCCESS 才推进；明确失败记录外部错误码；超时后可能已成功，进入 RECONCILING，通过 SAP 业务键或 adapter 查询核对，未确认前不得自动重发。无法支持远端幂等时使用本地 invocation 锁与外部对象检索；这不能保证远端 exactly-once，需明确残余风险。凭证冲销需独立受控流程，禁止用数据库回滚假装撤销 SAP 交易。
+17.5 检索与模型调用
+D：固定执行骨架由流程引擎控制，模型只负责 OCR 后理解、结构化建议、配置草稿与 Expert 评估；流程不由模型自由改写。模型网关统一 timeout、token budget、schema、版本标识和结果归档。Prompt/模型配置是 AssetVersion 的一部分。前端绝不保存模型密钥。
+外部邮件/附件是待处理数据，不得覆盖系统指令。检索上下文按 ACL 过滤；实体关系携带证据来源与有效期。Expert 输入分为 policy、verifiedFacts、skillResults、evidence、question，输出只能是 ExpertResult。保留简短可读理由和引用，不要求模型生成或公开内部思考过程。
+模型失败、拒答、输出不合法时不能默认通过；可重试一次结构化修复，仍失败走人工。OCR 置信阈值与 Expert confidence 分开，不把两个模型分数平均当财务授权。
+18 API 契约
+全部 D。建议 /api/v1；认证由服务端会话或 OIDC Bearer，演示模式使用固定 scoped principal。所有错误返回 {code,message,details,traceId}，列表 {items,total,cursor}，金额 {amountMinor,currency}。分页默认 20 最大 100，筛选在服务端，枚举非法 422。
+方法与路径
+目的
+请求关键字段
+结果与副作用
+GET /runtime/summary
+部门概况
+departmentId window
+cards rows snapshotAt
+GET /processes/{id}/instances
+工作列表
+status cursor
+实例与四类计数
+GET /instances/{id}
+详情
+无
+context evidence timeline 不产生业务变更
+POST /instances/{id}/events
+仅演示显式事件
+type expectedRevision
+replay 才开放
+GET /decisions
+待办
+state assignee
+同部门队列
+POST /decisions/{id}/resolve
+人工决定
+action reason returnNodeId expectedRevision evidenceSnapshotHash
+决定与新实例 revision
+POST /decisions/delegate
+批量委派
+taskIds assigneeId backupId reason revisions
+同事务授权验证
+GET /assets
+资产目录
+kind category search status
+版本摘要
+POST /assets
+新建
+kind name spec
+草稿版本
+PUT /assets/{id}/draft
+保存设计
+spec expectedRevision
+新草稿 revision
+POST /versions/{id}/submit
+提交审批
+comment expectedRevision
+ApprovalRequest
+POST /approvals/{id}/resolve
+配置审批
+action reason expectedRevision
+不改业务待办
+POST /versions/{id}/activate
+激活已批版
+expectedRevision
+activeVersion 原子切换
+POST /versions/{id}/test-runs
+沙箱测试
+caseIds input
+202 runId
+GET /test-runs/{id}
+测试进度
+无
+状态 指标 错误
+GET /connectors
+连接中心
+tab
+实例 卡片 路由
+POST /connectors/{id}/test
+健康测试
+routeVersion
+不修改业务对象
+GET /knowledge/graph
+图谱
+search type
+nodes edges selectedId
+GET /knowledge/entities/{id}
+实体详情
+无
+授权后的邻居与证据
+GET /audit/events
+审计查询
+instanceId traceId cursor
+递增 sequence
+GET /department/dashboard
+看板
+window
+KPI charts policies staffing
+POST /config-drafts
+人员/规则草稿
+kind scope spec expectedRevision
+待审批配置
+GET /events
+SSE
+departmentId Last-Event-ID
+增量事件
+
+内部执行接口不对普通前端开放：ToolGateway.invoke、SkillExecutor.run、ExpertExecutor.advise、ProcessRuntime.resume。鉴权必须服务端拒绝直接访问写入 adapter。
+resolve 示例请求与响应见 contracts/examples.json。HTTP：200 成功、201 创建、202 后台任务、400 无效动作、401 未登录、403 无权限、404 不存在或无权可见、409 版本冲突/已处理、412 证据或前置条件变化、422 Schema 错、429 限流、502 外部错误、503 服务不可用。创建/决定/写入接受 Idempotency-Key；重复同键同 payload 返回原结果，同键不同 payload 返回 409。
+SSE 每事件包含 id、type、aggregateId、revision、occurredAt、payload。断线从 Last-Event-ID 追补；超保留窗口返回 resync 提示，重新 GET 快照。前端忽略 revision≤当前的事件；事件乱序先补拉实体，禁止把旧状态覆盖新状态。
+19 种子数据与跨页一致性
+fixtures/seed.json 包含流程、八条实例、三条初始待办、任务目录、工具、连接器、图谱节点与边、KPI 展示快照、规则和评测示例，记录 observed 或 designed 来源。fixtures/scenarios.json 给出事件序列。不能从截图里对没有出现的数据作真实业务推断。
+两组数据必须区分。业务列表 0179 是异常详情演示；人工决策初始第一条对象是发票 51000983，不是 INV-2026-0179；审计案例 AP-2026-0731-014 也未被视频证明是同一个实例。P0 可在各页展示这些独立固定场景，禁止仅因同属“发票到付款”就合并 ID。闭环验收另用 scenario-linked-0179，显示同一实例贯穿页面，并标注它是 D 的联动场景。
+演示初始快照：运行中心 24/186/3/2；发票工作列表 4/2/1/1；待决队列 3；八流程目录；工具 8/4/4/2/99.24；SAP 8/7/6/2/12；看板保持视频值。调用 resetDemo 恢复所有 IndexedDB 记录、版本、事件和 viewport，不只刷新当前页面。
+integrated 一致性不变量：部门待人工数等于 WAITING_HUMAN 实例去重数，待办数可因多人审批多于实例数但须明确口径；实例四类数之和等于筛选全集；批准只减少有效待办；完成后等待数不再保留；发布前旧版本生效；未授权用户无法查看跨部门证据；一个业务对象的同一受控写入幂等键只对应一个有效外部结果。
+20 非功能与部署
+D 验收目标而非视频实测：本机演示首屏可交互 ≤3 秒，筛选和抽屉响应 ≤300 ms（不计注入模拟延迟）；1280 ×720 下普通页滚动流畅、12 节点图谱拖拽 ≥30 fps、100 节点流程设计基本交互 ≤100 ms。生产容量没有业务负载输入，本设计不承诺 TPS。先提供每租户 10 个并行流程 worker 的可配置默认，压测后调整。
+本地一条启动命令启动 web/api/postgres/redis/object-store，.env.example 只给变量名，默认 DEMO_MODE=true、ERP_WRITE_ENABLED=false。无外网、无模型密钥时 P0 可完整运行。数据库迁移和 fixtures 以幂等 seed 脚本导入，测试与开发隔离。日志默认去敏，不记录附件全文、凭据或银行账号；traceId 串起请求、任务、证据与审计。
+对象存储链接需短期授权，不把永久公开 URL 存进页面。生产数据库备份与恢复、队列重放、未完成实例恢复需有运维手册。未知远端写入结果单独告警并禁止自动清理。队列死信保留 instance/node/attempt/error，重放必须保留原写入幂等键。
+21 Coding Agent 实施顺序
+21.1 阶段 A 高保真可交互原型
+先读取本设计、reference/index.json 和 fixtures，搭建 AppShell 与十二路由，再做运行总览/工作列表/实例抽屉和人工待办。建立统一 store/repository，实现 resetDemo、replay 与 linked 两套场景。随后完成目录与全部配置页面，再接 React Flow、图谱与图表。每页都对参考截图检查布局，禁止提前改成个人喜好的深色仪表盘。
+阶段 A 的操作都可落本地，保存后刷新不丢失；所有未展示表单的补全都按 D，不等待用户逐字段批准。一次实现一组相互依赖模块，代码提交保持可运行。不要把目录卡、设计器和运行实例当作同一类对象。
+21.2 阶段 B 持久化与流程闭环
+在相同 DTO 下替换 FastAPI/PostgreSQL，做版本审批、RuleEvaluator、ProcessRuntime、DecisionService、模拟 ToolGateway 和追加式审计。跑完异常发票闭环与并发审批/重复写入测试；前端切为 server repository，保持页面无感。
+21.3 阶段 C 模型与企业集成
+接 OCR/LLM 网关、真实知识检索、真实 Connector 与 SAP sandbox。先读取、再模拟写、最后受控写；每个工具独立契约测试与财务语义确认。通过审批与安全测试后才启用生产写入，不能用“接了一个大模型”替代治理引擎。
+21.4 建议任务拆分与产出
+工单
+产出
+前置
+完成标准
+T01
+contracts 与 fixtures loader
+无
+schema 校验与 ID 引用通过
+T02
+AppShell 十二路由 设计 token
+T01
+1280 首屏与侧栏滚动正确
+T03
+运行中心 详情 人工决策
+T02
+linked 场景跨页状态一致
+T04
+流程任务目录与设计器
+T02
+图编辑 草稿保存 依赖编译
+T05
+Connector Tool Skill Expert
+T02
+边界正确 搜索测试提交有效
+T06
+一人部门与配置版本
+T02
+草稿不影响活动规则
+T07
+知识三维图与审计页
+T02
+旋转点选筛选与链路可追溯
+T08
+后台持久化 运行时 适配器
+T01 T03
+闭环 并发 幂等 恢复通过
+T09
+视觉与端到端验收
+T03–T08
+第22节检查全部达标
+
+22 验收用例
+22.1 视觉和页面验收
+用 Playwright 固定 viewport 1280 ×720，deviceScaleFactor=1，等待字体加载、禁动画、冻结演示时钟。按 reference/index.json 的页与状态生成截图。仅遮罩光标、浏览器原生滚动条、运行时间和三维图动态点位；不能遮罩大块页面来降低差异。以 shell、布局、文案、颜色、交互四项人工检查为主，像素差阈值由首轮同字体基线校准，D 初始可用非遮罩区域差异 <8% 做预警，不把该数当视频来源标准。
+至少检查十二页、实例抽屉上下两段、工具创建抽屉、Skill Builder、Task Designer、流程画布 100%/60%、知识选中与筛选、人工空态。标题/主文案/状态/数字必须一致，排版主要几何位置允许约 ±4 px；字体差异须说明。长表不能截断，滚动底部按钮可见。
+22.2 业务场景验收
+编号
+操作与条件
+预期结果
+E01
+点击运行中心发票到付款 查看 0179
+列表8条 打开同实体抽屉 URL可恢复
+E02
+replay 触发邮件调整事件
+0179 16500 差异2000 10.8% 4/2→3/3 仅触发一次
+E03
+linked 场景专家建议可接受但 mandatoryHuman=true
+仍进入待人工 不调用写工具
+E04
+批准待办后刷新并返回运行页
+待办减少 实例进入重新校验 审计有同trace
+E05
+两个浏览器同时批准
+一个成功 另一个409 仅一条有效决定
+E06
+批准后采购订单金额或证据变化
+原批准失效 412或重新人工 不沿旧payload写入
+E07
+缺少收货证据或Expert输出假引用
+ABSTAIN并转人工 禁写入
+E08
+规则金额阈值2% 等于2%与2.01%
+其他条件满足时前者通过 后者转复核
+E09
+写入超时但模拟远端已成功
+RECONCILING 查到对象后成功 不重复写
+E10
+队列重复投递相同nodeRun
+无第二次业务副作用 审计可有重复投递观察
+E11
+保存规则草稿并提交
+活动实例仍用旧版 新版未批准不生效
+E12
+流程库插入任务并自动布局
+选中节点后正确插入 连接与属性持久化
+E13
+流程缺负责人或写入控制边
+提交422 标出节点 不发布
+E14
+Task加知识与Connector依赖
+渲染为已关联 编译为上下文/连接解析 不赋Expert工具权
+E15
+工具搜索加权限筛选 重置
+AND过滤 总数与可见结果合理 重置恢复8条
+E16
+Skill固定测试 提交发布审批
+先测试run 后生成PENDING版本 指标标演示
+E17
+Expert试图输出执行命令字段
+schema拒绝 无adapter调用
+E18
+图谱点采购订单 筛人员 搜不存在词
+详情联动 过滤无悬空边 无结果有空态
+E19
+跨部门用户请求实例或证据
+服务端403/404 不泄漏对象内容
+E20
+关闭并重新进入任一设计器
+已保存草稿恢复 未提交值不影响active
+E21
+批准或拒绝操作发生
+trace中包含人 证据hash 规则version 与结果
+E22
+原型三条待办依次批准
+计数3→2→1→0 空态正确 可reset恢复
+E23
+切换运行记录Tab
+真正加载该版本运行列表 不能只弹toast
+E24
+调用GET实例详情10次
+实例金额/状态完全不变
+E25
+正常审批与异常确认同时创建
+同一待办队列显示 sourceKind 区别 不漏正常审批
+E26
+驳回重做后补证重新提交
+回指定节点 旧批准失效 新证据新revision
+E27
+完成实例后新增负反馈
+可追到判断与结果 不自动改规则或发布案例
+
+22.3 必要测试层
+单元覆盖 RuleEvaluator 的金额/数量/税率单位和阈值、FlowCompiler 约束、Expert evidence 校验、版本状态机。集成覆盖审批 CAS、outbox 同事务、scope 隔离、ToolInvocation 幂等、未知写入核对。端到端覆盖 E01–E27 的关键用户路径。视觉测试只对稳定页面建立基线，不为每个只读卡片写重复逻辑单测。
+23 已知不足与待确认项
+本轮音轨已自动转写并结合画面校核关键语义，但不宣称逐字人工听校；旁白解析标记 A，精确引语应以原音轨为准。当前 5 秒视觉采样可能遗漏极短菜单/提示或中间点击，故对“未展示”的断言仅指本轮已检查画面，不等于视频逐帧不存在。
+文件内容连接器完整目录、工具末两条、Skill 全类别清单、流程右侧完整尾段、发布审批弹窗内部、真实图关系语义和角色选项未充分曝光，已按 D 补齐。后续可用原文件对应区段做更密集复查。真实模型供应商/名称、SAP 系统和权限、财务规则口径、生产容量、证据保留期属于集成输入，不阻塞 P0。
+原型存在总览/明细口径不一致、0179金额突变、待办静态计数、类别筛选悬空连线、部分运行记录只有提示等信号。默认修复状态一致性而保留外观参考；只有 replayExactBugs 才复现显示缺陷。不得把这些缺陷误当可接受的生产需求。
+24 给 Coding Agent 的执行指令
+先通读 README.md、详细设计.md、reference/index.json、fixtures 与 contracts。以 P0 交互闭环和高保真为首个交付，按 T01–T09 顺序执行；不要只交静态页面或重新设计视觉。V/A/I/D 是证据等级，不是“D 可忽略”；D 是本方案为实施选定的默认决策。遇技术细节缺失按本设计默认落地，只有真实外部凭据、财务授权和无法推断的产品取舍才需要用户补充。
+资产类别、版本和业务实例必须独立建模；不能把 Expert 做成万能带工具 Agent；不能让审批按钮直接触发无保护的真实 ERP 写入；不能把原型静态指标冒充实测。在最终实现报告中分别列出画面还原程度、真实联动范围、模拟边界、通过测试和剩余集成事项。
+
+附录 关键画面索引
+以下缩略图用于定位原型布局。完整 1280 × 720 图片与全部 28 张参考在 reference 目录。
+01-runtime   视频 00:12.5
+
+02-instances   视频 00:42.5
+
+03-instance   视频 00:47.5
+
+05-human   视频 01:17.5
+
+07-process   视频 01:42.5
+
+08-flow   视频 01:57.5
+
+11-task-designer   视频 02:22.5
+
+12-dashboard   视频 02:32.5
+
+18-tools   视频 03:27.5
+
+21-skill-builder   视频 04:02.5
+
+23-expert   视频 04:07.5
+
+24-graph   视频 04:27.5
+
+27-audit   视频 05:52.5
